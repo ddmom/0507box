@@ -2,109 +2,91 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>인터랙티브 회전 박스</title>
+    <title>오늘의 행운의 색 뽑기</title>
     <style>
-        body { 
-            background-color: #111; 
-            margin: 0; 
-            overflow: hidden; 
-            cursor: none; /* 마우스 커서 숨김 */
-        }
-
-        /* 십자선 스타일 */
-        .line { 
-            position: absolute; 
-            background-color: rgba(255, 255, 255, 0.2); 
-            pointer-events: none; 
-        }
-        .horizontal { width: 100%; height: 1px; top: 0; }
+        body { background-color: #111; margin: 0; overflow: hidden; cursor: none; display: flex; flex-direction: column; align-items: center; }
+        .line { position: absolute; background-color: rgba(255, 255, 255, 0.1); pointer-events: none; z-index: 1; }
+        .horizontal { width: 100%; height: 1px; top: 0; left: 0; }
         .vertical { width: 1px; height: 100%; left: 0; }
-
-        /* 따라다니는 박스 스타일 */
-        .box {
-            position: absolute; 
-            width: 60px; 
-            height: 60px;
-            border: 2px solid white;
-            margin-left: -30px; 
-            margin-top: -30px;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            font-size: 12px; 
-            font-weight: bold; 
-            pointer-events: none;
-            /* 색상 변화를 조금 더 부드럽게 */
-            transition: background-color 0.1s ease;
-        }
+        #message { position: fixed; top: 20%; color: white; font-size: 22px; text-align: center; pointer-events: none; z-index: 10; line-height: 1.8; }
+        .box { position: absolute; width: 80px; height: 80px; border: 3px solid white; margin-left: -40px; margin-top: -40px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; pointer-events: none; transition: background-color 0.2s ease; z-index: 5; top: 0; left: 0; }
+        
+        /* 강조 텍스트 스타일 */
+        .color-name { font-size: 32px; font-weight: bold; display: block; margin-bottom: 5px; }
+        .rgb-code { font-size: 18px; opacity: 0.8; font-family: monospace; }
     </style>
 </head>
 <body>
 
+    <div id="message">화면을 클릭해서<br>오늘의 행운의 색을 확인해보세요!</div>
     <div class="line horizontal"></div>
     <div class="line vertical"></div>
-    <div class="box">RUN</div>
+    <div class="box">?</div>
 
     <script>
         const horizontal = document.querySelector('.horizontal');
         const vertical = document.querySelector('.vertical');
         const box = document.querySelector('.box');
+        const message = document.querySelector('#message');
+
+        // [전문가의 팁] 이름과 RGB 코드를 함께 담았습니다.
+        const luckyColors = [
+            { name: "따뜻한 햇살 노랑", rgb: "rgb(255, 215, 0)", hex: "#FFD700" },
+            { name: "평온한 바다 파랑", rgb: "rgb(30, 144, 255)", hex: "#1E90FF" },
+            { name: "싱그러운 숲 초록", rgb: "rgb(50, 205, 50)", hex: "#32CD32" },
+            { name: "정열적인 장미 빨강", rgb: "rgb(255, 69, 0)", hex: "#FF4500" },
+            { name: "우아한 라벤더 보라", rgb: "rgb(147, 112, 219)", hex: "#9370DB" },
+            { name: "포근한 솜사탕 분홍", rgb: "rgb(255, 182, 193)", hex: "#FFB6C1" },
+            { name: "깊은 밤 에메랄드", rgb: "rgb(0, 139, 139)", hex: "#008B8B" },
+            { name: "활기찬 오렌지", rgb: "rgb(255, 140, 0)", hex: "#FF8C00" },
+            { name: "클래식 실버", rgb: "rgb(192, 192, 192)", hex: "#C0C0C0" },
+            { name: "신비로운 민트", rgb: "rgb(127, 255, 212)", hex: "#7FFFD4" }
+        ];
 
         let mouseX = 0, mouseY = 0, rotate = 0;
         let requestID;
         let isRunning = true;
+        let selectedLuck = luckyColors[0];
 
-        // 1. 랜덤 색상 생성기
-        function getRandomColor() {
-            const r = Math.floor(Math.random() * 256);
-            const g = Math.floor(Math.random() * 256);
-            const b = Math.floor(Math.random() * 256);
-            return `rgb(${r}, ${g}, ${b})`;
-        }
-
-        // 2. 마우스 이동 감지
         document.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-
-            // 십자선과 박스 위치 업데이트
             vertical.style.transform = `translateX(${mouseX}px)`;
             horizontal.style.transform = `translateY(${mouseY}px)`;
-            
-            // 움직일 때마다 색상 변경
-            box.style.backgroundColor = getRandomColor();
-
-            // 멈춰있을 때도 위치는 마우스를 따라가야 함
-            if (!isRunning) {
-                box.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotate}deg)`;
-            }
+            if (!isRunning) updatePosition();
         });
 
-        // 3. 단순 클릭으로 멈춤/재생 제어
+        function updatePosition() {
+            box.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotate}deg)`;
+        }
+
         document.addEventListener('click', () => {
             if (isRunning) {
-                // 돌고 있다면 멈춤
                 cancelAnimationFrame(requestID);
                 isRunning = false;
-                box.innerHTML = 'STOP';
+                box.innerHTML = 'LUCKY';
+                // 이름과 RGB 코드를 함께 표시합니다.
+                message.innerHTML = `오늘의 행운의 색은<br>
+                    <span class="color-name" style="color:${selectedLuck.hex};">${selectedLuck.name}</span>
+                    <span class="rgb-code" style="color:${selectedLuck.hex};">(${selectedLuck.rgb})</span> 입니다!`;
             } else {
-                // 멈춰 있다면 다시 재생
                 isRunning = true;
-                box.innerHTML = 'RUN';
+                box.innerHTML = '?';
+                message.innerHTML = "화면을 클릭해서<br>오늘의 행운의 색을 확인해보세요!";
                 animate();
             }
         });
 
-        // 4. 애니메이션 루프 함수
         function animate() {
-            // 위치 이동과 회전을 동시에 적용
-            box.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotate}deg)`;
-            rotate += 5; // 회전 속도
-
+            if (isRunning) {
+                selectedLuck = luckyColors[Math.floor(Math.random() * luckyColors.length)];
+                box.style.backgroundColor = selectedLuck.hex;
+                rotate += 5;
+            }
+            updatePosition();
             requestID = requestAnimationFrame(animate);
         }
 
-        // 최초 실행
         animate();
     </script>
 </body>
