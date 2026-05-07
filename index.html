@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>인터랙티브 회전 박스</title>
+    <style>
+        body { 
+            background-color: #111; 
+            margin: 0; 
+            overflow: hidden; 
+            cursor: none; /* 마우스 커서 숨김 */
+        }
+
+        /* 십자선 스타일 */
+        .line { 
+            position: absolute; 
+            background-color: rgba(255, 255, 255, 0.2); 
+            pointer-events: none; 
+        }
+        .horizontal { width: 100%; height: 1px; top: 0; }
+        .vertical { width: 1px; height: 100%; left: 0; }
+
+        /* 따라다니는 박스 스타일 */
+        .box {
+            position: absolute; 
+            width: 60px; 
+            height: 60px;
+            border: 2px solid white;
+            margin-left: -30px; 
+            margin-top: -30px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 12px; 
+            font-weight: bold; 
+            pointer-events: none;
+            /* 색상 변화를 조금 더 부드럽게 */
+            transition: background-color 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="line horizontal"></div>
+    <div class="line vertical"></div>
+    <div class="box">RUN</div>
+
+    <script>
+        const horizontal = document.querySelector('.horizontal');
+        const vertical = document.querySelector('.vertical');
+        const box = document.querySelector('.box');
+
+        let mouseX = 0, mouseY = 0, rotate = 0;
+        let requestID;
+        let isRunning = true;
+
+        // 1. 랜덤 색상 생성기
+        function getRandomColor() {
+            const r = Math.floor(Math.random() * 256);
+            const g = Math.floor(Math.random() * 256);
+            const b = Math.floor(Math.random() * 256);
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // 2. 마우스 이동 감지
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+
+            // 십자선과 박스 위치 업데이트
+            vertical.style.transform = `translateX(${mouseX}px)`;
+            horizontal.style.transform = `translateY(${mouseY}px)`;
+            
+            // 움직일 때마다 색상 변경
+            box.style.backgroundColor = getRandomColor();
+
+            // 멈춰있을 때도 위치는 마우스를 따라가야 함
+            if (!isRunning) {
+                box.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotate}deg)`;
+            }
+        });
+
+        // 3. 단순 클릭으로 멈춤/재생 제어
+        document.addEventListener('click', () => {
+            if (isRunning) {
+                // 돌고 있다면 멈춤
+                cancelAnimationFrame(requestID);
+                isRunning = false;
+                box.innerHTML = 'STOP';
+            } else {
+                // 멈춰 있다면 다시 재생
+                isRunning = true;
+                box.innerHTML = 'RUN';
+                animate();
+            }
+        });
+
+        // 4. 애니메이션 루프 함수
+        function animate() {
+            // 위치 이동과 회전을 동시에 적용
+            box.style.transform = `translate(${mouseX}px, ${mouseY}px) rotate(${rotate}deg)`;
+            rotate += 5; // 회전 속도
+
+            requestID = requestAnimationFrame(animate);
+        }
+
+        // 최초 실행
+        animate();
+    </script>
+</body>
+</html>
